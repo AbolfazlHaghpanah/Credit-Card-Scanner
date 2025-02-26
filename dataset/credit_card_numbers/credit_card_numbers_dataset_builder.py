@@ -1,6 +1,9 @@
+from typing import Iterator, Tuple, Any, Dict
+
 import tensorflow_datasets as tfds
 import tensorflow as tf
 import os
+
 
 class CreditCardNumbers(tfds.core.GeneratorBasedBuilder):
     """DatasetBuilder for digit classification (0-9)."""
@@ -32,19 +35,19 @@ class CreditCardNumbers(tfds.core.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager):
         """Returns SplitGenerators."""
-        dataset_path = os.path.join(os.path.dirname(__file__),"../..","dataset/labeled_data")
+        dataset_path = os.path.join(os.path.dirname(__file__), "../..", "dataset/labeled_data")
 
         return {
             "train": self._generate_examples(os.path.join(dataset_path))
         }
 
-    def _generate_examples(self, path):
+    def _generate_examples(self, path) -> Iterator[Tuple[str, Dict[str, Any]]]:
         """Yields examples."""
         for label in range(10):
             label_dir = os.path.join(path, label.__str__())
 
             if not os.path.isdir(label_dir):
-                continue
+                raise ValueError("boobs")
 
             for image_file in os.listdir(label_dir):
                 if image_file.endswith(".png"):
