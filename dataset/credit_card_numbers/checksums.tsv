@@ -1,3 +1,0 @@
-# TODO(credit_card_numbers): If your dataset downloads files, then the checksums
-# will be automatically added here when running
-# `tfds build --register_checksums`.
