@@ -19,7 +19,10 @@ import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraProvider
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
 import androidx.camera.core.ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -28,6 +31,7 @@ import androidx.camera.core.impl.Config
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.LifecycleCameraController
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.Runnable
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.Executor
@@ -36,7 +40,11 @@ import java.util.concurrent.Executors
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var cameraController: LifecycleCameraController
+
+    //    private lateinit var cameraController: LifecycleCameraController
+    private lateinit var cameraProvider: ProcessCameraProvider
+    private val imageCapture = ImageCapture.Builder().build()
+    private val cameraPreview = Preview.Builder().build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,19 +61,47 @@ class MainActivity : AppCompatActivity() {
         binding.takePicture.setOnClickListener {
             takePicture()
         }
+        binding.startAnalytics.setOnClickListener {
+            startAnalytics()
+        }
+    }
+
+    private fun startAnalytics() {
+//        val imageAnalysis = ImageAnalysis.Builder()
+//            .setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
+//            .build()
+//        imageAnalysis.setAnalyzer(
+//            Executors.newSingleThreadExecutor()
+//        ) { image ->
+//            Log.d("anal", "startAnalytics: ${image.imageInfo.rotationDegrees}")
+//        }
+//
     }
 
     private fun startCamera() {
-        val previewView = binding.viewFinder
-        cameraController = LifecycleCameraController(this).apply {
-            bindToLifecycle(this@MainActivity)
-            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-        }
-        previewView.controller = cameraController
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+        cameraProviderFuture.addListener(
+            {
+                cameraProvider = cameraProviderFuture.get()
+
+                cameraPreview.setSurfaceProvider(binding.viewFinder.surfaceProvider)
+
+                cameraProvider.unbindAll()
+
+                cameraProvider.bindToLifecycle(
+                    this,
+                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    cameraPreview,
+                    imageCapture
+                )
+            },
+            ContextCompat.getMainExecutor(this)
+        )
     }
 
     private fun takePicture() {
-        cameraController.takePicture(
+        imageCapture.takePicture(
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
