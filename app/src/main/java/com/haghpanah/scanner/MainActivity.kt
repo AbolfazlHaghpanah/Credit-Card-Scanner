@@ -13,6 +13,8 @@ import com.haghpanah.scanner.databinding.ActivityMainBinding
 import java.util.concurrent.ExecutorService
 import android.Manifest
 import android.content.ContentValues
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
@@ -20,6 +22,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
 import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.impl.Config
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -27,10 +30,13 @@ import androidx.camera.view.LifecycleCameraController
 import com.google.common.util.concurrent.ListenableFuture
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var cameraController: LifecycleCameraController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,15 +49,38 @@ class MainActivity : AppCompatActivity() {
         } else {
             requestPermission()
         }
+
+        binding.takePicture.setOnClickListener {
+            takePicture()
+        }
     }
 
     private fun startCamera() {
         val previewView = binding.viewFinder
-        val cameraController = LifecycleCameraController(this).apply {
+        cameraController = LifecycleCameraController(this).apply {
             bindToLifecycle(this@MainActivity)
             cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
         }
         previewView.controller = cameraController
+    }
+
+    private fun takePicture() {
+        cameraController.takePicture(
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    super.onCaptureSuccess(image)
+                    binding.imagePreview.setImageBitmap(image.toBitmap())
+                }
+            }
+        )
+    }
+
+    private fun ImageProxy.toBitmap(): Bitmap {
+        val buffer = planes[0].buffer
+        val bytes = ByteArray(buffer.remaining())
+        buffer.get(bytes)
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     }
 
     private fun requestPermission() {
