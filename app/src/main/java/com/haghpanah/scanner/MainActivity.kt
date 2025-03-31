@@ -23,6 +23,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.core.impl.Config
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.LifecycleCameraController
 import com.google.common.util.concurrent.ListenableFuture
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -37,10 +38,21 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.viewFinder
+        if (allPermissionsGranted()) {
+            startCamera()
+        } else {
+            requestPermission()
+        }
     }
 
-    private fun startCamera() {}
+    private fun startCamera() {
+        val previewView = binding.viewFinder
+        val cameraController = LifecycleCameraController(this).apply {
+            bindToLifecycle(this@MainActivity)
+            cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+        }
+        previewView.controller = cameraController
+    }
 
     private fun requestPermission() {
         activityResultLauncher.launch(REQUIRED_PERMISSIONS)
