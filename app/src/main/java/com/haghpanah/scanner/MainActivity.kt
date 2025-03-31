@@ -1,50 +1,35 @@
 package com.haghpanah.scanner
 
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import androidx.camera.core.ImageCapture
-import androidx.camera.video.Recorder
-import androidx.camera.video.Recording
-import androidx.camera.video.VideoCapture
-import androidx.core.content.ContextCompat
-import com.haghpanah.scanner.databinding.ActivityMainBinding
-import java.util.concurrent.ExecutorService
 import android.Manifest
-import android.content.ContentValues
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.provider.MediaStore
-import android.util.Log
+import android.os.Build
+import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraProvider
+import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
-import androidx.camera.core.ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
-import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
-import androidx.camera.core.impl.Config
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.LifecycleCameraController
-import com.google.common.util.concurrent.ListenableFuture
-import kotlinx.coroutines.Runnable
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.concurrent.Executor
+import androidx.core.content.ContextCompat
+import com.haghpanah.scanner.databinding.ActivityMainBinding
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    //    private lateinit var cameraController: LifecycleCameraController
     private lateinit var cameraProvider: ProcessCameraProvider
     private val imageCapture = ImageCapture.Builder().build()
     private val cameraPreview = Preview.Builder().build()
+    private val imageAnalysis = ImageAnalysis.Builder()
+        .setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
+        .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,15 +52,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startAnalytics() {
-//        val imageAnalysis = ImageAnalysis.Builder()
-//            .setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
-//            .build()
-//        imageAnalysis.setAnalyzer(
-//            Executors.newSingleThreadExecutor()
-//        ) { image ->
-//            Log.d("anal", "startAnalytics: ${image.imageInfo.rotationDegrees}")
-//        }
-//
+        imageAnalysis.setAnalyzer(
+            Executors.newSingleThreadExecutor()
+        ) { image ->
+            image.close()
+        }
     }
 
     private fun startCamera() {
@@ -84,16 +65,14 @@ class MainActivity : AppCompatActivity() {
         cameraProviderFuture.addListener(
             {
                 cameraProvider = cameraProviderFuture.get()
-
                 cameraPreview.setSurfaceProvider(binding.viewFinder.surfaceProvider)
-
                 cameraProvider.unbindAll()
-
                 cameraProvider.bindToLifecycle(
                     this,
                     CameraSelector.DEFAULT_BACK_CAMERA,
                     cameraPreview,
-                    imageCapture
+                    imageCapture,
+                    imageAnalysis
                 )
             },
             ContextCompat.getMainExecutor(this)
@@ -101,6 +80,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun takePicture() {
+        imageAnalysis.clearAnalyzer()
         imageCapture.takePicture(
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageCapturedCallback() {
