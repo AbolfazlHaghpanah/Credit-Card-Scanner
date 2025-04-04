@@ -26,5 +26,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Scanner"
+
 include(":app")
- 
+include(":opencv:sdk")

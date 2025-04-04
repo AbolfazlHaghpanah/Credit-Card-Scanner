@@ -1,0 +1,17 @@
+{
+  "installationFolder": "/Users/abolfazlhaghpanah/project/scanner/android/opencv/sdk/build/intermediates/prefab_package/release/prefab",
+  "gradlePath": ":opencv:sdk",
+  "packageInfo": {
+    "packageName": "sdk",
+    "packageSchemaVersion": 2,
+    "packageDependencies": [],
+    "modules": [
+      {
+        "moduleName": "opencv_jni_shared",
+        "moduleHeaders": "/Users/abolfazlhaghpanah/project/scanner/android/opencv/sdk/native/jni/include",
+        "moduleExportLibraries": [],
+        "abis": []
+      }
+    ]
+  }
+}

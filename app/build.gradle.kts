@@ -39,6 +39,7 @@ android {
             version = "3.18.1"
         }
     }
+
     buildFeatures {
         viewBinding = true
     }
@@ -54,6 +55,8 @@ dependencies {
 
     implementation("androidx.camera:camera-view:${camerax_version}")
     implementation("androidx.camera:camera-extensions:${camerax_version}")
+
+    implementation(project(":opencv:sdk"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

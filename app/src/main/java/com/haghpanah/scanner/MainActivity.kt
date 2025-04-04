@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +19,7 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.haghpanah.scanner.databinding.ActivityMainBinding
+import org.opencv.android.OpenCVLoader
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
@@ -33,9 +35,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        if (OpenCVLoader.initLocal()) {
+            Log.i("OpenCV", "OpenCV successfully loaded.");
+        }
 
         if (allPermissionsGranted()) {
             startCamera()
@@ -51,10 +56,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    external fun checkIfPictureContainsCreditCard(
+        imageData: ByteArray,
+        width: Int,
+        height: Int,
+    ): Boolean
+
     private fun startAnalytics() {
         imageAnalysis.setAnalyzer(
             Executors.newSingleThreadExecutor()
         ) { image ->
+            val buffer = image.planes[0].buffer
+            val data = ByteArray(buffer.remaining())
+            buffer.get(data)
+
+            Log.d("mmd", "startAnalytics: ")
+            if (checkIfPictureContainsCreditCard(data, image.width, image.height)) {
+                takePicture()
+            }
             image.close()
         }
     }
@@ -145,6 +164,7 @@ class MainActivity : AppCompatActivity() {
 
         // Used to load the 'scanner' library on application startup.
         init {
+            System.loadLibrary("opencv_java4")
             System.loadLibrary("scanner")
         }
     }

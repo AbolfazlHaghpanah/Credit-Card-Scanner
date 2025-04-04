@@ -1,10 +1,17 @@
 #include <jni.h>
-#include <string>
+#include <opencv2/opencv.hpp>
+#include <android/log.h>
 
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_haghpanah_scanner_MainActivity_stringFromJNI(
-        JNIEnv* env,
-        jobject /* this */) {
-    std::string hello = "Hello from C++";
-    return env->NewStringUTF(hello.c_str());
+#define LOG_TAG "NativeOpenCV"
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+
+//using namespace cv;
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_haghpanah_scanner_MainActivity_checkIfPictureContainsCreditCard(
+        JNIEnv *env, jobject thiz,
+        jbyteArray imageData,
+        jint width, jint height
+) {
+    return JNI_FALSE;
 }
