@@ -7,6 +7,8 @@ import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
+import android.view.Surface
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -31,6 +33,9 @@ class MainActivity : AppCompatActivity() {
     private val cameraPreview = Preview.Builder().build()
     private val imageAnalysis = ImageAnalysis.Builder()
         .setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
+        .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
+        .setTargetResolution(Size(1280, 720))
+        .setImageQueueDepth(2)
         .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     ): Boolean
 
     private fun startAnalytics() {
+        Log.d("mmd", "startAnalytics:")
         imageAnalysis.setAnalyzer(
             Executors.newSingleThreadExecutor()
         ) { image ->
@@ -70,8 +76,10 @@ class MainActivity : AppCompatActivity() {
             val data = ByteArray(buffer.remaining())
             buffer.get(data)
 
-            Log.d("mmd", "startAnalytics: ")
-            if (checkIfPictureContainsCreditCard(data, image.width, image.height)) {
+            val isCreditCard = checkIfPictureContainsCreditCard(data, image.width, image.height)
+
+            if (isCreditCard) {
+                Log.d("mmd", "oooooooo  i found credit card")
                 takePicture()
             }
             image.close()
@@ -84,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         cameraProviderFuture.addListener(
             {
                 cameraProvider = cameraProviderFuture.get()
-                cameraPreview.setSurfaceProvider(binding.viewFinder.surfaceProvider)
+                cameraPreview.setSurfaceProvider(binding.previewView.surfaceProvider)
                 cameraProvider.unbindAll()
                 cameraProvider.bindToLifecycle(
                     this,
@@ -99,7 +107,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun takePicture() {
-        imageAnalysis.clearAnalyzer()
+//        imageAnalysis.clearAnalyzer()
         imageCapture.takePicture(
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageCapturedCallback() {
