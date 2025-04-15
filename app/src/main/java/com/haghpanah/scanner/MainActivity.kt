@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.util.Size
-import android.view.Surface
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +15,7 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -29,7 +29,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var cameraProvider: ProcessCameraProvider
-    private val imageCapture = ImageCapture.Builder().build()
+    private val imageCapture = ImageCapture.Builder()
+        .setCaptureMode(CAPTURE_MODE_MINIMIZE_LATENCY)
+        .build()
     private val cameraPreview = Preview.Builder().build()
     private val imageAnalysis = ImageAnalysis.Builder()
         .setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
@@ -67,20 +69,35 @@ class MainActivity : AppCompatActivity() {
         height: Int,
     ): Boolean
 
+    external fun preprocessImage(
+        imageData: ByteArray,
+        width: Int,
+        height: Int,
+    ): Bitmap
+
     private fun startAnalytics() {
         Log.d("mmd", "startAnalytics:")
         imageAnalysis.setAnalyzer(
-            Executors.newSingleThreadExecutor()
+            ContextCompat.getMainExecutor(this)
         ) { image ->
-            val buffer = image.planes[0].buffer
-            val data = ByteArray(buffer.remaining())
-            buffer.get(data)
+//            val buffer = image.planes[0].buffer
+//            val data = ByteArray(buffer.remaining())
+//            buffer.get(data)
 
-            val isCreditCard = checkIfPictureContainsCreditCard(data, image.width, image.height)
+            val a = yuv420888ToNv21(image)
+            val isCreditCard = checkIfPictureContainsCreditCard(a, image.width, image.height)
+
+            binding.imagePreview.setImageBitmap(
+                preprocessImage(
+                    a,
+                    image.width,
+                    image.height
+                )
+            )
 
             if (isCreditCard) {
                 Log.d("mmd", "oooooooo  i found credit card")
-                takePicture()
+//                takePicture()
             }
             image.close()
         }
@@ -107,16 +124,55 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun takePicture() {
-//        imageAnalysis.clearAnalyzer()
+        imageAnalysis.clearAnalyzer()
         imageCapture.takePicture(
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     super.onCaptureSuccess(image)
-                    binding.imagePreview.setImageBitmap(image.toBitmap())
+
+                    val nv21 = yuv420888ToNv21(image)
+
                 }
             }
         )
+    }
+
+    fun yuv420888ToNv21(image: ImageProxy): ByteArray {
+        val yBuffer = image.planes[0].buffer
+        val uBuffer = image.planes[1].buffer
+        val vBuffer = image.planes[2].buffer
+
+        val ySize = yBuffer.remaining()
+        val uSize = uBuffer.remaining()
+        val vSize = vBuffer.remaining()
+
+        val nv21 = ByteArray(ySize + uSize + vSize)
+
+        yBuffer.get(nv21, 0, ySize)
+
+        val chromaRowStride = image.planes[1].rowStride
+        val chromaPixelStride = image.planes[1].pixelStride
+
+        // Interleave U and V like NV21: VU VU VU...
+        var offset = ySize
+        val width = image.width
+        val height = image.height
+
+        val u = ByteArray(uSize)
+        val v = ByteArray(vSize)
+        uBuffer.get(u)
+        vBuffer.get(v)
+
+        for (row in 0 until height / 2) {
+            for (col in 0 until width / 2) {
+                val uvIndex = row * chromaRowStride + col * chromaPixelStride
+                nv21[offset++] = v[uvIndex]  // V first
+                nv21[offset++] = u[uvIndex]  // Then U
+            }
+        }
+
+        return nv21
     }
 
     private fun ImageProxy.toBitmap(): Bitmap {
