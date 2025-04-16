@@ -39,13 +39,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraProvider: ProcessCameraProvider
 
     @Inject
-    private lateinit var cameraPreview: Preview
+    lateinit var cameraPreview: Preview
 
     @Inject
-    private lateinit var imageAnalysis: ImageAnalysis
+    lateinit var imageAnalysis: ImageAnalysis
 
     @Inject
-    private lateinit var nativeLibraryHelper: NativeLibraryHelper
+    lateinit var nativeLibraryHelper: NativeLibraryHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,7 +83,6 @@ class MainActivity : AppCompatActivity() {
 
             if (isCreditCard) {
                 Log.d("mmd", "oooooooo  i found credit card")
-//                takePicture()
             }
             image.close()
         }
