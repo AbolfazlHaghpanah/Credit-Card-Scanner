@@ -8,6 +8,9 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.util.Size
+import android.view.Surface
+import android.view.Surface.ROTATION_0
+import android.view.Surface.ROTATION_90
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -21,33 +24,33 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.haghpanah.scanner.databinding.ActivityMainBinding
+import com.haghpanah.scanner.domain.NativeLibraryHelper
+import dagger.hilt.android.AndroidEntryPoint
 import org.opencv.android.OpenCVLoader
 import java.util.concurrent.Executors
+import javax.inject.Inject
+import javax.inject.Singleton
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
     private lateinit var cameraProvider: ProcessCameraProvider
-    private val imageCapture = ImageCapture.Builder()
-        .setCaptureMode(CAPTURE_MODE_MINIMIZE_LATENCY)
-        .build()
-    private val cameraPreview = Preview.Builder().build()
-    private val imageAnalysis = ImageAnalysis.Builder()
-        .setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
-        .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
-        .setTargetResolution(Size(1280, 720))
-        .setImageQueueDepth(2)
-        .build()
+
+    @Inject
+    private lateinit var cameraPreview: Preview
+
+    @Inject
+    private lateinit var imageAnalysis: ImageAnalysis
+
+    @Inject
+    private lateinit var nativeLibraryHelper: NativeLibraryHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        if (OpenCVLoader.initLocal()) {
-            Log.i("OpenCV", "OpenCV successfully loaded.");
-        }
 
         if (allPermissionsGranted()) {
             startCamera()
@@ -55,40 +58,23 @@ class MainActivity : AppCompatActivity() {
             requestPermission()
         }
 
-        binding.takePicture.setOnClickListener {
-            takePicture()
-        }
         binding.startAnalytics.setOnClickListener {
             startAnalytics()
         }
     }
 
-    external fun checkIfPictureContainsCreditCard(
-        imageData: ByteArray,
-        width: Int,
-        height: Int,
-    ): Boolean
-
-    external fun preprocessImage(
-        imageData: ByteArray,
-        width: Int,
-        height: Int,
-    ): Bitmap
-
     private fun startAnalytics() {
         Log.d("mmd", "startAnalytics:")
         imageAnalysis.setAnalyzer(
+            //TODO change it to background executor when there was no need of showing in imageView
             ContextCompat.getMainExecutor(this)
         ) { image ->
-//            val buffer = image.planes[0].buffer
-//            val data = ByteArray(buffer.remaining())
-//            buffer.get(data)
-
             val a = yuv420888ToNv21(image)
-            val isCreditCard = checkIfPictureContainsCreditCard(a, image.width, image.height)
+            val isCreditCard =
+                nativeLibraryHelper.isImageContainsCreditCard(a, image.width, image.height)
 
             binding.imagePreview.setImageBitmap(
-                preprocessImage(
+                nativeLibraryHelper.getPreprocessedImage(
                     a,
                     image.width,
                     image.height
@@ -115,26 +101,10 @@ class MainActivity : AppCompatActivity() {
                     this,
                     CameraSelector.DEFAULT_BACK_CAMERA,
                     cameraPreview,
-                    imageCapture,
                     imageAnalysis
                 )
             },
             ContextCompat.getMainExecutor(this)
-        )
-    }
-
-    private fun takePicture() {
-        imageAnalysis.clearAnalyzer()
-        imageCapture.takePicture(
-            ContextCompat.getMainExecutor(this),
-            object : ImageCapture.OnImageCapturedCallback() {
-                override fun onCaptureSuccess(image: ImageProxy) {
-                    super.onCaptureSuccess(image)
-
-                    val nv21 = yuv420888ToNv21(image)
-
-                }
-            }
         )
     }
 
@@ -226,10 +196,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }.toTypedArray()
 
-        // Used to load the 'scanner' library on application startup.
-        init {
-            System.loadLibrary("opencv_java4")
-            System.loadLibrary("scanner")
-        }
     }
 }

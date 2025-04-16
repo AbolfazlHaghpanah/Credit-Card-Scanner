@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kapt)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -46,15 +48,20 @@ android {
     ndkVersion = "27.1.12297006"
 }
 
-dependencies {
-    val camerax_version = "1.2.2"
-    implementation("androidx.camera:camera-core:${camerax_version}")
-    implementation("androidx.camera:camera-camera2:${camerax_version}")
-    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
-    implementation("androidx.camera:camera-video:${camerax_version}")
+kapt {
+    correctErrorTypes = true
+}
 
-    implementation("androidx.camera:camera-view:${camerax_version}")
-    implementation("androidx.camera:camera-extensions:${camerax_version}")
+dependencies {
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.video)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.extensions)
+
+    implementation(libs.hilt.andorid)
+    kapt(libs.hilt.compiler)
 
     implementation(project(":opencv:sdk"))
 

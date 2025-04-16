@@ -9,15 +9,14 @@ using namespace cv;
 #define LOG_TAG "NativeCreditCard"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
-// Converts YUV to RGB
 Mat convertYUVtoRGB(jbyte *data, int width, int height) {
     Mat yuv(height + height / 2, width, CV_8UC1, reinterpret_cast<uchar *>(data));
     Mat rgb;
     cvtColor(yuv, rgb, COLOR_YUV2RGB_NV21);
+    cv::rotate(rgb, rgb, cv::ROTATE_90_CLOCKWISE);
     return rgb;
 }
 
-// Crops the image to ROI (Region of Interest)
 Mat cropToROI(const Mat &image, int width, int height) {
     int roiWidth = width * 0.6;
     int roiHeight = height * 0.4;
@@ -27,7 +26,6 @@ Mat cropToROI(const Mat &image, int width, int height) {
     return image(roiRect);
 }
 
-// Preprocesses the image: grayscale + blur + edge detection
 Mat preprocessForEdgeDetection(const Mat &roi) {
     Mat gray, blurred, edges;
     cvtColor(roi, gray, COLOR_RGB2GRAY);
@@ -36,7 +34,6 @@ Mat preprocessForEdgeDetection(const Mat &roi) {
     return edges;
 }
 
-// Finds contours and checks for credit card-like rectangles
 bool detectCreditCardShape(const Mat &edges) {
     std::vector<std::vector<Point>> contours;
     findContours(edges, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
@@ -59,25 +56,6 @@ bool detectCreditCardShape(const Mat &edges) {
     return false;
 }
 
-// JNI bridge function
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_haghpanah_scanner_MainActivity_checkIfPictureContainsCreditCard(
-        JNIEnv *env, jobject thiz,
-        jbyteArray imageData,
-        jint width, jint height) {
-
-    jbyte *data = env->GetByteArrayElements(imageData, nullptr);
-    if (data == nullptr) return JNI_FALSE;
-
-    Mat rgb = convertYUVtoRGB(data, width, height);
-    Mat roi = cropToROI(rgb, width, height);
-    Mat edges = preprocessForEdgeDetection(roi);
-    bool isCard = detectCreditCardShape(edges);
-
-    env->ReleaseByteArrayElements(imageData, data, 0);
-    return isCard ? JNI_TRUE : JNI_FALSE;
-}
-
 jobject convertMatToBitmap(JNIEnv *env, Mat &srcMat) {
     jclass bitmapCls = env->FindClass("android/graphics/Bitmap");
     jmethodID createBitmap = env->GetStaticMethodID(
@@ -86,8 +64,10 @@ jobject convertMatToBitmap(JNIEnv *env, Mat &srcMat) {
             "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
 
     jclass configCls = env->FindClass("android/graphics/Bitmap$Config");
-    jfieldID argb8888Fld = env->GetStaticFieldID(configCls, "ARGB_8888",
-                                                 "Landroid/graphics/Bitmap$Config;");
+    jfieldID argb8888Fld = env->GetStaticFieldID(
+            configCls,
+            "ARGB_8888",
+            "Landroid/graphics/Bitmap$Config;");
     jobject argb8888Obj = env->GetStaticObjectField(configCls, argb8888Fld);
 
     jobject bitmap = env->CallStaticObjectMethod(
@@ -115,7 +95,7 @@ jobject convertMatToBitmap(JNIEnv *env, Mat &srcMat) {
         return nullptr;
     }
 
-    Mat dst(info.height, info.width, CV_8UC4, bitmapPixels);
+    Mat dst((int) info.height, (int) info.width, CV_8UC4, bitmapPixels);
     rgba.copyTo(dst);
 
     AndroidBitmap_unlockPixels(env, bitmap);
@@ -123,8 +103,29 @@ jobject convertMatToBitmap(JNIEnv *env, Mat &srcMat) {
 }
 
 extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_haghpanah_scanner_data_NativeLibraryHelperImpl_isImageContainsCreditCard(
+        JNIEnv *env,
+        jobject thiz,
+        jbyteArray imageData,
+        jint width,
+        jint height) {
+    jbyte *data = env->GetByteArrayElements(imageData, nullptr);
+    if (data == nullptr) return JNI_FALSE;
+
+    Mat rgb = convertYUVtoRGB(data, width, height);
+    Mat roi = cropToROI(rgb, width, height);
+    Mat edges = preprocessForEdgeDetection(roi);
+    bool isCard = detectCreditCardShape(edges);
+
+    env->ReleaseByteArrayElements(imageData, data, 0);
+    return isCard ? JNI_TRUE : JNI_FALSE;
+
+}
+
+extern "C"
 JNIEXPORT jobject JNICALL
-Java_com_haghpanah_scanner_MainActivity_preprocessImage(
+Java_com_haghpanah_scanner_data_NativeLibraryHelperImpl_getPreprocessedImage(
         JNIEnv *env,
         jobject thiz,
         jbyteArray imageData,
@@ -136,7 +137,7 @@ Java_com_haghpanah_scanner_MainActivity_preprocessImage(
 
     Mat rgb = convertYUVtoRGB(data, width, height);
     Mat roi = cropToROI(rgb, width, height);
-    Mat edges = preprocessForEdgeDetection(roi);
+    Mat edges = preprocessForEdgeDetection(rgb);
 
     return convertMatToBitmap(env, edges);
 }
