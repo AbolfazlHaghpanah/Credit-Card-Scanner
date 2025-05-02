@@ -1,18 +1,26 @@
 package com.haghpanah.scanner.domain
 
 import android.graphics.Bitmap
-import android.text.BoringLayout
+import java.nio.ByteBuffer
 
 interface NativeLibraryHelper {
     fun isImageContainsCreditCard(
-        imageData: ByteArray,
         width: Int,
         height: Int,
+        yBuffer: ByteBuffer,
+        yRowStride: Int,
     ): Boolean
 
     fun getPreprocessedImage(
+        width: Int,
+        height: Int,
+        yBuffer: ByteBuffer,
+        yRowStride: Int,
+    ): Bitmap?
+
+    fun startNumberDetection(
         imageData: ByteArray,
         width: Int,
         height: Int,
-    ): Bitmap
+    ): String
 }

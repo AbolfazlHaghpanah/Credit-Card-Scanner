@@ -4,7 +4,7 @@
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".ui.MainActivity">
 
     <!-- Camera Preview Fullscreen -->
     <androidx.camera.view.PreviewView
@@ -13,16 +13,8 @@
         android:layout_height="match_parent"
         android:scaleType="fitCenter" />
 
-    <!-- Overlay rectangle for credit card -->
-    <View
-        android:id="@+id/cardOverlay"
-        android:layout_width="376dp"
-        android:layout_height="240dp"
-        android:layout_centerInParent="true"
-        android:background="@drawable/camera_preview_overlay_border" />
-
     <!-- Bottom panel with image preview and buttons -->
-    <LinearLayout
+    <androidx.cardview.widget.CardView
         android:id="@+id/bottomPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -40,27 +32,59 @@
             android:contentDescription="@string/image_preview"
             android:scaleType="centerCrop" />
 
+
         <!-- Buttons row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="28dp"
             android:gravity="center"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:weightSum="2">
 
-            <Button
-                android:id="@+id/takePicture"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/take_photo" />
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:weightSum="2">
 
-            <Button
-                android:id="@+id/startAnalytics"
-                android:layout_width="0dp"
+                <Button
+                    android:id="@+id/takePicture"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/take_photo" />
+
+                <Button
+                    android:id="@+id/startAnalytics"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/start_analytics" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/thold1Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <SeekBar
+                android:id="@+id/tholdSlider1"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/start_analytics" />
+                android:max="300" />
+
+            <TextView
+                android:id="@+id/thold2Text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <SeekBar
+                android:id="@+id/tholdSlider2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="300" />
         </LinearLayout>
-    </LinearLayout>
+    </androidx.cardview.widget.CardView>
 </RelativeLayout>

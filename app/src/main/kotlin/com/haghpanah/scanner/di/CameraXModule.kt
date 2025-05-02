@@ -27,6 +27,6 @@ class CameraXModule {
         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
         .setTargetResolution(Size(1280, 720))
         .setTargetRotation(ROTATION_0)
-        .setImageQueueDepth(2)
+        .setImageQueueDepth(3)
         .build()
 }

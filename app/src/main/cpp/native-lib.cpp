@@ -9,51 +9,43 @@ using namespace cv;
 #define LOG_TAG "NativeCreditCard"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
-Mat convertYUVtoRGB(jbyte *data, int width, int height) {
-    Mat yuv(height + height / 2, width, CV_8UC1, reinterpret_cast<uchar *>(data));
-    Mat rgb;
-    cvtColor(yuv, rgb, COLOR_YUV2RGB_NV21);
-    cv::rotate(rgb, rgb, cv::ROTATE_90_CLOCKWISE);
-    return rgb;
-}
+int threshold1 = 85;
+int threshold2 = 125;
 
-Mat cropToROI(const Mat &image, int width, int height) {
-    int roiWidth = width * 0.6;
-    int roiHeight = height * 0.4;
-    int roiX = (width - roiWidth) / 2;
-    int roiY = (height - roiHeight) / 2;
-    Rect roiRect(roiX, roiY, roiWidth, roiHeight);
-    return image(roiRect);
-}
+cv::Mat preprocessForEdgeDetection(const cv::Mat &image) {
+    cv::Mat blurred, edges;
+    cv::GaussianBlur(image, blurred, cv::Size(7, 7), 0);
+    cv::Canny(blurred, edges, threshold1, threshold2);
 
-Mat preprocessForEdgeDetection(const Mat &roi) {
-    Mat gray, blurred, edges;
-    cvtColor(roi, gray, COLOR_RGB2GRAY);
-    GaussianBlur(gray, blurred, Size(5, 5), 0);
-    Canny(blurred, edges, 50, 150);
     return edges;
 }
 
-bool detectCreditCardShape(const Mat &edges) {
+std::vector<Point> findContours(const Mat &edges, const Mat &image) {
     std::vector<std::vector<Point>> contours;
     findContours(edges, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
-    for (const auto &contour: contours) {
+    for (size_t i = 0; i < contours.size(); i++) {
         std::vector<Point> approx;
-        approxPolyDP(contour, approx, 0.02 * arcLength(contour, true), true);
+        approxPolyDP(contours[i], approx, 0.05 * arcLength(contours[i], true), true);
 
-        if (approx.size() == 4) {
+        if (approx.size() == 4
+            && isContourConvex(approx)
+            && contourArea(contours[i]) > 800
+                ) {
+
             Rect rect = boundingRect(approx);
-            float aspectRatio = static_cast<float>(rect.width) / rect.height;
+            float aspectRatio = static_cast<float>(rect.width) / (float) rect.height;
 
-            if (aspectRatio > 1.5 && aspectRatio < 1.7) {
-                LOGD("Credit Card Detected!");
-                return true;
+            if (aspectRatio > 1.3 && aspectRatio < 1.7) {
+
+                cv::drawContours(image, contours, i, cv::Scalar(0, 255, 0), 2);
+                cv::rectangle(image, rect, cv::Scalar(255, 0, 0), 2);
+                return approx;
             }
         }
     }
 
-    return false;
+    return {};
 }
 
 jobject convertMatToBitmap(JNIEnv *env, Mat &srcMat) {
@@ -107,19 +99,22 @@ JNIEXPORT jboolean JNICALL
 Java_com_haghpanah_scanner_data_NativeLibraryHelperImpl_isImageContainsCreditCard(
         JNIEnv *env,
         jobject thiz,
-        jbyteArray imageData,
         jint width,
-        jint height) {
-    jbyte *data = env->GetByteArrayElements(imageData, nullptr);
-    if (data == nullptr) return JNI_FALSE;
+        jint height,
+        jobject yBuffer,
+        jint yRowStride) {
 
-    Mat rgb = convertYUVtoRGB(data, width, height);
-    Mat roi = cropToROI(rgb, width, height);
-    Mat edges = preprocessForEdgeDetection(roi);
-    bool isCard = detectCreditCardShape(edges);
+    auto *yData = static_cast<uint8_t *>(env->GetDirectBufferAddress(yBuffer));
+    cv::Mat image(height, width, CV_8UC1);
+    for (int i = 0; i < height; ++i) {
+        memcpy(image.ptr(i), yData + i * yRowStride, width);
+    }
+    rotate(image, image, cv::ROTATE_90_CLOCKWISE);
 
-    env->ReleaseByteArrayElements(imageData, data, 0);
-    return isCard ? JNI_TRUE : JNI_FALSE;
+    Mat edges = preprocessForEdgeDetection(image);
+    std::vector<Point> approx = findContours(edges, image);
+
+    return !approx.empty() ? JNI_TRUE : JNI_FALSE;
 
 }
 
@@ -127,17 +122,48 @@ extern "C"
 JNIEXPORT jobject JNICALL
 Java_com_haghpanah_scanner_data_NativeLibraryHelperImpl_getPreprocessedImage(
         JNIEnv *env,
-        jobject thiz,
-        jbyteArray imageData,
+        jobject,
         jint width,
-        jint height) {
+        jint height,
+        jobject yBuffer,
+        jint yRowStride) {
 
-    jbyte *data = env->GetByteArrayElements(imageData, nullptr);
-    if (data == nullptr) return nullptr;
+    auto *yData = static_cast<uint8_t *>(env->GetDirectBufferAddress(yBuffer));
+    cv::Mat image(height, width, CV_8UC1);
+    for (int i = 0; i < height; ++i) {
+        memcpy(image.ptr(i), yData + i * yRowStride, width);
+    }
+    rotate(image, image, cv::ROTATE_90_CLOCKWISE);
 
-    Mat rgb = convertYUVtoRGB(data, width, height);
-    Mat roi = cropToROI(rgb, width, height);
-    Mat edges = preprocessForEdgeDetection(rgb);
+    Mat edges = preprocessForEdgeDetection(image);
+    std::vector<Point> approx = findContours(edges, image);
 
-    return convertMatToBitmap(env, edges);
+    if (!approx.empty()) {
+        LOGD("Foundddddeeeeddd");
+        LOGD("%s", std::to_string(approx.data()->x).c_str());
+        LOGD("%s", std::to_string(approx.data()->y).c_str());
+
+        cv::Mat mask = cv::Mat::zeros(edges.size(), CV_8UC1);
+
+        std::vector<std::vector<cv::Point>> fillCont;
+        fillCont.push_back(approx);
+        cv::fillPoly(mask, fillCont, cv::Scalar(255));
+
+        image.copyTo(edges, mask);
+
+        return convertMatToBitmap(env, edges);
+    }
+    return nullptr;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_haghpanah_scanner_ui_MainActivity_setThreshhold(
+        JNIEnv *env,
+        jobject thiz,
+        jint first,
+        jint second) {
+    threshold1 = first;
+    threshold2 = second;
+    return;
 }

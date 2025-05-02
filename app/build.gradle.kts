@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.hilt.andorid)
     kapt(libs.hilt.compiler)
 
+    implementation(libs.text.recognition)
+
     implementation(project(":opencv:sdk"))
 
     implementation(libs.androidx.core.ktx)

@@ -1,35 +1,36 @@
-package com.haghpanah.scanner
+package com.haghpanah.scanner.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.util.Size
-import android.view.Surface
-import android.view.Surface.ROTATION_0
-import android.view.Surface.ROTATION_90
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.haghpanah.scanner.databinding.ActivityMainBinding
 import com.haghpanah.scanner.domain.NativeLibraryHelper
 import dagger.hilt.android.AndroidEntryPoint
-import org.opencv.android.OpenCVLoader
-import java.util.concurrent.Executors
+import org.opencv.osgi.OpenCVInterface
+import java.io.ByteArrayOutputStream
 import javax.inject.Inject
-import javax.inject.Singleton
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -52,6 +53,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        var t1 = 0
+        var t2 = 0
+
         if (allPermissionsGranted()) {
             startCamera()
         } else {
@@ -61,30 +65,87 @@ class MainActivity : AppCompatActivity() {
         binding.startAnalytics.setOnClickListener {
             startAnalytics()
         }
+
+        binding.tholdSlider1.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(
+                p0: SeekBar?,
+                p1: Int,
+                p2: Boolean,
+            ) {
+
+                binding.thold1Text.text = t1.toString()
+                t1 = p1
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+                setThreshhold(t1, t2)
+            }
+        })
+
+        binding.tholdSlider2.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(
+                p0: SeekBar?,
+                p1: Int,
+                p2: Boolean,
+            ) {
+                binding.thold2Text.text = t2.toString()
+                t2 = p1
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+                setThreshhold(t1, t2)
+            }
+        })
     }
 
+    external fun setThreshhold(first: Int, second: Int)
+
+    @OptIn(ExperimentalGetImage::class)
     private fun startAnalytics() {
-        Log.d("mmd", "startAnalytics:")
         imageAnalysis.setAnalyzer(
             //TODO change it to background executor when there was no need of showing in imageView
             ContextCompat.getMainExecutor(this)
         ) { image ->
-            val a = yuv420888ToNv21(image)
-            val isCreditCard =
-                nativeLibraryHelper.isImageContainsCreditCard(a, image.width, image.height)
+            val yPlane = image.planes[0]
 
-            binding.imagePreview.setImageBitmap(
-                nativeLibraryHelper.getPreprocessedImage(
-                    a,
-                    image.width,
-                    image.height
-                )
+            val creditCardImage = nativeLibraryHelper.getPreprocessedImage(
+                width = image.width,
+                height = image.height,
+                yBuffer = yPlane.buffer,
+                yRowStride = yPlane.rowStride,
             )
 
-            if (isCreditCard) {
-                Log.d("mmd", "oooooooo  i found credit card")
+            if (creditCardImage != null) {
+                binding.imagePreview.setImageBitmap(creditCardImage)
+                imageAnalysis.clearAnalyzer()
+
+                image.image?.let {
+                    val recognizer =
+                        TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                    val imageInput =
+                        InputImage.fromMediaImage(it, image.imageInfo.rotationDegrees)
+
+                    recognizer.process(imageInput).addOnSuccessListener { text ->
+                        text.textBlocks.forEach {
+                            Log.d("mmd", "analysed ::: ${it.text}")
+                        }
+                    }.addOnFailureListener {
+                        throw it
+                    }.addOnCompleteListener {
+                        image.close()
+                    }
+                } ?: run {
+                    Log.d("mmd", "startAnalytics: image was null")
+                }
+            } else {
+                image.close()
             }
-            image.close()
         }
     }
 
@@ -105,50 +166,6 @@ class MainActivity : AppCompatActivity() {
             },
             ContextCompat.getMainExecutor(this)
         )
-    }
-
-    fun yuv420888ToNv21(image: ImageProxy): ByteArray {
-        val yBuffer = image.planes[0].buffer
-        val uBuffer = image.planes[1].buffer
-        val vBuffer = image.planes[2].buffer
-
-        val ySize = yBuffer.remaining()
-        val uSize = uBuffer.remaining()
-        val vSize = vBuffer.remaining()
-
-        val nv21 = ByteArray(ySize + uSize + vSize)
-
-        yBuffer.get(nv21, 0, ySize)
-
-        val chromaRowStride = image.planes[1].rowStride
-        val chromaPixelStride = image.planes[1].pixelStride
-
-        // Interleave U and V like NV21: VU VU VU...
-        var offset = ySize
-        val width = image.width
-        val height = image.height
-
-        val u = ByteArray(uSize)
-        val v = ByteArray(vSize)
-        uBuffer.get(u)
-        vBuffer.get(v)
-
-        for (row in 0 until height / 2) {
-            for (col in 0 until width / 2) {
-                val uvIndex = row * chromaRowStride + col * chromaPixelStride
-                nv21[offset++] = v[uvIndex]  // V first
-                nv21[offset++] = u[uvIndex]  // Then U
-            }
-        }
-
-        return nv21
-    }
-
-    private fun ImageProxy.toBitmap(): Bitmap {
-        val buffer = planes[0].buffer
-        val bytes = ByteArray(buffer.remaining())
-        buffer.get(bytes)
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
     }
 
     private fun requestPermission() {
@@ -194,6 +211,5 @@ class MainActivity : AppCompatActivity() {
                     add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 }
             }.toTypedArray()
-
     }
 }
