@@ -96,7 +96,7 @@ jobject convertMatToBitmap(JNIEnv *env, Mat &srcMat) {
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_com_haghpanah_scanner_data_NativeLibraryHelperImpl_isImageContainsCreditCard(
+Java_com_haghpanah_creditcardscanner_data_NativeLibraryHelperImpl_isImageContainsCreditCard(
         JNIEnv *env,
         jobject thiz,
         jint width,
@@ -120,7 +120,7 @@ Java_com_haghpanah_scanner_data_NativeLibraryHelperImpl_isImageContainsCreditCar
 
 extern "C"
 JNIEXPORT jobject JNICALL
-Java_com_haghpanah_scanner_data_NativeLibraryHelperImpl_getPreprocessedImage(
+Java_com_haghpanah_creditcardscanner_data_NativeLibraryHelperImpl_getPreprocessedImage(
         JNIEnv *env,
         jobject,
         jint width,
@@ -158,7 +158,7 @@ Java_com_haghpanah_scanner_data_NativeLibraryHelperImpl_getPreprocessedImage(
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_haghpanah_scanner_ui_MainActivity_setThreshhold(
+Java_com_haghpanah_creditcardscanner_ui_MainActivity_setThreshhold(
         JNIEnv *env,
         jobject thiz,
         jint first,

@@ -1,7 +1,7 @@
-package com.haghpanah.scanner.di
+package com.haghpanah.creditcardscanner.di
 
-import com.haghpanah.scanner.data.NativeLibraryHelperImpl
-import com.haghpanah.scanner.domain.NativeLibraryHelper
+import com.haghpanah.creditcardscanner.data.NativeLibraryHelperImpl
+import com.haghpanah.creditcardscanner.domain.NativeLibraryHelper
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

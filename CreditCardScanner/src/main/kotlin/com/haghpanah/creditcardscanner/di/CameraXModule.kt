@@ -1,4 +1,4 @@
-package com.haghpanah.scanner.di
+package com.haghpanah.creditcardscanner.di
 
 import android.util.Size
 import android.view.Surface.ROTATION_0

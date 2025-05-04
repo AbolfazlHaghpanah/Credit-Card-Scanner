@@ -7,6 +7,8 @@ plugins {
 
 android {
     namespace = "com.haghpanah.scanner"
+    compileSdk = 34
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -15,6 +17,10 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+
+    defaultConfig {
+        minSdk = 24
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -49,6 +55,8 @@ dependencies {
     implementation(libs.androidx.camera.extensions)
 
     implementation(libs.hilt.andorid)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
     kapt(libs.hilt.compiler)
 
     implementation(libs.text.recognition)
