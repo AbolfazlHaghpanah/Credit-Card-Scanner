@@ -29,3 +29,4 @@ rootProject.name = "Scanner"
 
 include(":app")
 include(":opencv:sdk")
+include(":CreditCardScanner")
