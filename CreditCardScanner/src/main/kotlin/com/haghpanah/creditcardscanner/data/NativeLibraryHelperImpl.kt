@@ -20,10 +20,4 @@ class NativeLibraryHelperImpl @Inject constructor() : NativeLibraryHelper {
         yBuffer: ByteBuffer,
         yRowStride: Int,
     ): Bitmap?
-
-    external override fun startNumberDetection(
-        imageData: ByteArray,
-        width: Int,
-        height: Int,
-    ): String
 }

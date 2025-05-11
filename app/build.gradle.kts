@@ -35,17 +35,9 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.18.1"
-        }
-    }
-
     buildFeatures {
         viewBinding = true
     }
-    ndkVersion = "27.1.12297006"
 }
 
 kapt {
@@ -53,20 +45,8 @@ kapt {
 }
 
 dependencies {
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.video)
-    implementation(libs.androidx.camera.view)
-    implementation(libs.androidx.camera.extensions)
-
     implementation(libs.hilt.andorid)
     kapt(libs.hilt.compiler)
-
-    implementation(libs.text.recognition)
-
-    implementation(project(":opencv:sdk"))
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

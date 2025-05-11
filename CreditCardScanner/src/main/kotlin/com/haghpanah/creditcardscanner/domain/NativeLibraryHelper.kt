@@ -17,10 +17,4 @@ interface NativeLibraryHelper {
         yBuffer: ByteBuffer,
         yRowStride: Int,
     ): Bitmap?
-
-    fun startNumberDetection(
-        imageData: ByteArray,
-        width: Int,
-        height: Int,
-    ): String
 }

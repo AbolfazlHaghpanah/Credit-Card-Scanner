@@ -158,7 +158,7 @@ Java_com_haghpanah_creditcardscanner_data_NativeLibraryHelperImpl_getPreprocesse
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_haghpanah_creditcardscanner_ui_MainActivity_setThreshhold(
+Java_com_haghpanah_creditcardscanner_ui_CreditCardScannerActivity_setThreshhold(
         JNIEnv *env,
         jobject thiz,
         jint first,
