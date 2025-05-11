@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.haghpanah.creditcardscanner">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-feature android:name="android.hardware.camera.any" />
 
@@ -12,7 +11,7 @@
 
     <application>
         <activity
-            android:name=".ui.CreditCardScannerActivity"
+            android:name="com.haghpanah.creditcardscanner.ui.CreditCardScannerActivity"
             android:exported="false"
             android:theme="@style/Theme.Scanner" />
     </application>
