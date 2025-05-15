@@ -10,8 +10,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/CreditCardScanner" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/creditcardscanner" />
             <option value="$PROJECT_DIR$/opencv" />
             <option value="$PROJECT_DIR$/opencv/sdk" />
           </set>

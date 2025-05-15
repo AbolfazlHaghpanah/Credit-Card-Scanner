@@ -19,8 +19,6 @@ class MainActivity : AppCompatActivity() {
         binding.startScan.setOnClickListener {
             CreditCardScanner.startActivity(this)
         }
-//        setSupportActionBar(binding.toolbar)
-
 
 //        val navController = findNavController(R.id.nav_host_fragment_content_credit_card_scanner)
 //        appBarConfiguration = AppBarConfiguration(navController.graph)

@@ -1,4 +1,4 @@
-package com.haghpanah.creditcardscanner.ui.content
+package com.haghpanah.creditcardscanner.ui.viewmodel
 
 import android.graphics.Bitmap
 import android.util.Log
@@ -6,7 +6,6 @@ import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
-import androidx.camera.core.Preview.SurfaceProvider
 import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
@@ -17,7 +16,7 @@ import java.util.concurrent.Executors
 import javax.inject.Inject
 
 @HiltViewModel
-class CreditCardScannerContentViewModel @Inject constructor(
+class CreditCardScannerViewModel @Inject constructor(
     private val cameraPreview: Preview,
     private val imageAnalysis: ImageAnalysis,
     private val nativeLibraryHelper: NativeLibraryHelper,
@@ -25,7 +24,7 @@ class CreditCardScannerContentViewModel @Inject constructor(
 
     fun getCameraPreview() = cameraPreview
 
-    fun setCameraPreviewSurfaceProvider(surfaceProvider: SurfaceProvider) {
+    fun setCameraPreviewSurfaceProvider(surfaceProvider: Preview.SurfaceProvider) {
         cameraPreview.setSurfaceProvider(surfaceProvider)
     }
 

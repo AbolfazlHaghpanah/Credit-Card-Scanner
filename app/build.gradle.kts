@@ -45,7 +45,7 @@ kapt {
 }
 
 dependencies {
-    implementation(project(":CreditCardScanner"))
+    implementation(project(":creditcardscanner"))
     implementation(libs.hilt.andorid)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.core.ktx)
