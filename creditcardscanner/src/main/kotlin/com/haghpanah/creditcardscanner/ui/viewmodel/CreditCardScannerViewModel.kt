@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModel
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.haghpanah.creditcardscanner.domain.NativeLibraryHelper
+import com.haghpanah.creditcardscanner.data.imagerecognizer.ImageRecognizer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -19,7 +19,7 @@ import javax.inject.Inject
 class CreditCardScannerViewModel @Inject constructor(
     private val cameraPreview: Preview,
     private val imageAnalysis: ImageAnalysis,
-    private val nativeLibraryHelper: NativeLibraryHelper,
+    private val imageRecognizer: ImageRecognizer,
 ) : ViewModel() {
 
     fun getCameraPreview() = cameraPreview
@@ -37,7 +37,7 @@ class CreditCardScannerViewModel @Inject constructor(
         ) { image ->
             val yPlane = image.planes[0]
 
-            val creditCardImage = nativeLibraryHelper.getPreprocessedImage(
+            val creditCardImage = imageRecognizer.getPreprocessedImage(
                 width = image.width,
                 height = image.height,
                 yBuffer = yPlane.buffer,
@@ -47,6 +47,7 @@ class CreditCardScannerViewModel @Inject constructor(
             if (creditCardImage != null) {
                 imageAnalysis.clearAnalyzer()
                 onImageFound.invoke(creditCardImage)
+
                 image.image?.let {
                     val recognizer =
                         TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -70,5 +71,4 @@ class CreditCardScannerViewModel @Inject constructor(
             }
         }
     }
-
 }

@@ -1,11 +1,10 @@
-package com.haghpanah.creditcardscanner.data
+package com.haghpanah.creditcardscanner.data.imagerecognizer
 
 import android.graphics.Bitmap
-import com.haghpanah.creditcardscanner.domain.NativeLibraryHelper
 import java.nio.ByteBuffer
 import javax.inject.Inject
 
-class NativeLibraryHelperImpl @Inject constructor() : NativeLibraryHelper {
+class ImageRecognizerImpl @Inject constructor() : ImageRecognizer {
 
     external override fun isImageContainsCreditCard(
         width: Int,

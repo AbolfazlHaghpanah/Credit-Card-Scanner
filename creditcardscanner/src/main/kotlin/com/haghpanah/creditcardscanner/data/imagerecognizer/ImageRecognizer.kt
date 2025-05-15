@@ -1,9 +1,9 @@
-package com.haghpanah.creditcardscanner.domain
+package com.haghpanah.creditcardscanner.data.imagerecognizer
 
 import android.graphics.Bitmap
 import java.nio.ByteBuffer
 
-interface NativeLibraryHelper {
+interface ImageRecognizer {
     fun isImageContainsCreditCard(
         width: Int,
         height: Int,
