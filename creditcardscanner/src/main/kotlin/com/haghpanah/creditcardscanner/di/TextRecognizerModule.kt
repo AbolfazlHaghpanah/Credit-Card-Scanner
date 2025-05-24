@@ -11,7 +11,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class TextRecognizerModule {
+internal abstract class TextRecognizerModule {
 
     @Binds
     @Singleton
@@ -19,9 +19,9 @@ abstract class TextRecognizerModule {
         textRecognizerImpl: TextRecognizerImpl,
     ): TextRecognizer
 
-    companion object {
-        @Provides
-        @Singleton
-        fun provede
-    }
+//    companion object {
+//        @Provides
+//        @Singleton
+//        fun provede
+//    }
 }

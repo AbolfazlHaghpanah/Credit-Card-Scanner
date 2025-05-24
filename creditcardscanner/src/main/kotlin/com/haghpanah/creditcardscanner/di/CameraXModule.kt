@@ -12,7 +12,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-class CameraXModule {
+internal class CameraXModule {
 
     @Provides
     fun provideCameraPreview(): Preview = Preview

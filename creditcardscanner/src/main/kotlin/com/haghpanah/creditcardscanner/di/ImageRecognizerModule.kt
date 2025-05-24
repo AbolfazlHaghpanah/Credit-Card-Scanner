@@ -9,7 +9,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface ImageRecognizerModule {
+internal interface ImageRecognizerModule {
 
     @Binds
     fun bindsImageRecognizer(
