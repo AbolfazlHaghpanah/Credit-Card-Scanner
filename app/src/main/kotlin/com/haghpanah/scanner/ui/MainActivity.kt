@@ -27,7 +27,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         binding.startScan.apply {
             setOnClickListener {
                 creditCardScanner.startActivity(this@MainActivity)
