@@ -1,7 +1,6 @@
 package com.haghpanah.creditcardscanner.ui.viewmodel
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -49,16 +48,15 @@ class CreditCardScannerViewModel @Inject constructor(
         ) { image ->
             val yPlane = image.planes[0]
 
-            val creditCardImage = imageRecognizer.getPreprocessedImage(
+            val isCreditCardFound = imageRecognizer.isImageContainsCreditCard(
                 width = image.width,
                 height = image.height,
                 yBuffer = yPlane.buffer,
                 yRowStride = yPlane.rowStride,
             )
 
-            if (creditCardImage != null) {
+            if (isCreditCardFound) {
                 imageAnalysis.clearAnalyzer()
-                onImageFound.invoke(creditCardImage)
 
                 val creditCardDataResult = textRecognizer.getCreditCardData(
                     imageProxy = image,
@@ -73,7 +71,6 @@ class CreditCardScannerViewModel @Inject constructor(
                         creditCardScanner.setCreditCardData(creditCardDataResult)
                     }
                 }
-
             } else {
                 image.close()
             }

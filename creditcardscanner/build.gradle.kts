@@ -10,17 +10,39 @@ android {
     compileSdk = 34
 
     buildTypes {
+        debug {
+            ndk{
+                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+            }
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk{
+                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+            }
         }
     }
 
     defaultConfig {
         minSdk = 24
+
+        externalNativeBuild {
+            cmake {
+                // Passes optional arguments to CMake.
+                arguments.addAll(listOf("-DANDROID_ARM_NEON=TRUE", "-DANDROID_TOOLCHAIN=clang"))
+
+                // Sets a flag to enable format macro constants for the C compiler.
+                cFlags.add("-D__STDC_FORMAT_MACROS")
+
+                // Sets optional flags for the C++ compiler.
+                cppFlags.addAll(listOf("-fexceptions", "-frtti", "-fstack-protector-all"))
+
+            }
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

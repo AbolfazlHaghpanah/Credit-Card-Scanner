@@ -23,6 +23,7 @@ import com.haghpanah.scanner.databinding.FragmentCreditCardScannerContentBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executor
 
 @AndroidEntryPoint
 class FragmentCreditCardScannerContent : Fragment() {
@@ -42,7 +43,6 @@ class FragmentCreditCardScannerContent : Fragment() {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.scanResult.collectLatest {
                     if (it != null) {
-                        Log.d("mmd", "onCreateView: finish Activity")
                         activity?.finish()
                     }
                 }
@@ -63,9 +63,7 @@ class FragmentCreditCardScannerContent : Fragment() {
         }
 
         _binding.startAnalytics.setOnClickListener {
-            viewModel.startAnalytics { result ->
-//                _binding.imagePreview.setImageBitmap(result)
-            }
+            viewModel.startAnalytics { result -> }
         }
     }
 

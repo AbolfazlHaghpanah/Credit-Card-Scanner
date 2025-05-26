@@ -115,7 +115,6 @@ Java_com_haghpanah_creditcardscanner_data_imagerecognizer_ImageRecognizerImpl_is
     std::vector<Point> approx = findContours(edges, image);
 
     return !approx.empty() ? JNI_TRUE : JNI_FALSE;
-
 }
 
 extern "C"
