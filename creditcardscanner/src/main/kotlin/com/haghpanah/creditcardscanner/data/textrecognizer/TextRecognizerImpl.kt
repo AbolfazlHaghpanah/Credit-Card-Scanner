@@ -43,6 +43,11 @@ class TextRecognizerImpl @Inject constructor() : TextRecognizer {
                 imageProxy.close()
             }
 
+        while (true) {
+            if (creditCardData != null) {
+                break
+            }
+        }
         return creditCardData
     }
 
@@ -75,10 +80,12 @@ class TextRecognizerImpl @Inject constructor() : TextRecognizer {
     private fun List<String>.exportNumbers(): String {
         return requireNotNull(
             find { text ->
-                text.matches(Regex("\\d{4}( \\d{4}){3}"))
-            }
+                text.replace("\\s".toRegex(), "").matches(Regex("\\d{16}"))
+            }?.replace("\\s".toRegex(), "")
         ) {
-            "Could Not Find Credit CardNumbers From TextBlocks"
+            "Could Not Find Credit CardNumbers From TextBlock : ${
+                this.joinToString { it.trim() }
+            }"
         }
     }
 

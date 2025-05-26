@@ -1,7 +1,6 @@
 package com.haghpanah.creditcardscanner.di
 
 import com.haghpanah.creditcardscanner.core.CreditCardScanner
-import com.haghpanah.creditcardscanner.core.CreditCardScannerImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +13,7 @@ internal object CoreModule {
 
     @Provides
     @Singleton
-    fun providesCreditCardScanner(impl: CreditCardScannerImpl): CreditCardScanner {
+    fun providesCreditCardScanner(): CreditCardScanner {
         return CreditCardScannerProvider.getInstance()
     }
 }

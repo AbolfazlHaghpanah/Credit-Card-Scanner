@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,9 +15,14 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.haghpanah.creditcardscanner.ui.viewmodel.CreditCardScannerViewModel
 import com.haghpanah.scanner.databinding.FragmentCreditCardScannerContentBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class FragmentCreditCardScannerContent : Fragment() {
@@ -32,6 +38,17 @@ class FragmentCreditCardScannerContent : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View? {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.scanResult.collectLatest {
+                    if (it != null) {
+                        Log.d("mmd", "onCreateView: finish Activity")
+                        activity?.finish()
+                    }
+                }
+            }
+        }
+
         _binding = FragmentCreditCardScannerContentBinding.inflate(inflater, container, false)
         return _binding.root
     }
@@ -47,7 +64,7 @@ class FragmentCreditCardScannerContent : Fragment() {
 
         _binding.startAnalytics.setOnClickListener {
             viewModel.startAnalytics { result ->
-                _binding.imagePreview.setImageBitmap(result)
+//                _binding.imagePreview.setImageBitmap(result)
             }
         }
     }

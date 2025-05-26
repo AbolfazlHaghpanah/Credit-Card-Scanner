@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 internal class CreditCardScannerImpl @Inject constructor() : CreditCardScanner() {
     private val _creditCardData = MutableStateFlow<CreditCardData?>(null)
 
@@ -17,6 +19,7 @@ internal class CreditCardScannerImpl @Inject constructor() : CreditCardScanner()
     }
 
     override fun observeCreditCardData(): Flow<CreditCardData> {
+
         return _creditCardData.filterNotNull()
     }
 
