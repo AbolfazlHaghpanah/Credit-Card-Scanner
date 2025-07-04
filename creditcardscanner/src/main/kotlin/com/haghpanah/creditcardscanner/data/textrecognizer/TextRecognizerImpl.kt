@@ -51,16 +51,6 @@ class TextRecognizerImpl @Inject constructor() : TextRecognizer {
         return creditCardData
     }
 
-    private fun List<String>.then(
-        condition: Boolean,
-        execute: List<String>.() -> Unit,
-    ): List<String> {
-        if (condition) {
-            execute.invoke(this)
-        }
-        return this
-    }
-
     private fun List<String>.exportCreditCardData(
         exportShaba: Boolean,
         exportCvv2: Boolean,

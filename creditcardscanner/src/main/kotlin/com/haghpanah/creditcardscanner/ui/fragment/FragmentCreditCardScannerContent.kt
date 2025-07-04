@@ -61,10 +61,6 @@ class FragmentCreditCardScannerContent : Fragment() {
         } else {
             requestPermission()
         }
-
-        _binding.startAnalytics.setOnClickListener {
-            viewModel.startAnalytics { result -> }
-        }
     }
 
     private fun startCamera() {
@@ -84,6 +80,8 @@ class FragmentCreditCardScannerContent : Fragment() {
             },
             ContextCompat.getMainExecutor(requireContext())
         )
+
+        viewModel.startAnalytics()
     }
 
     private fun requestPermission() {

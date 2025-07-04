@@ -42,7 +42,7 @@ class CreditCardScannerViewModel @Inject constructor(
     fun getImageAnalytics() = imageAnalysis
 
     @OptIn(ExperimentalGetImage::class)
-    fun startAnalytics(onImageFound: (Bitmap?) -> Unit) {
+    fun startAnalytics() {
         imageAnalysis.setAnalyzer(
             Executors.newSingleThreadExecutor()
         ) { image ->
