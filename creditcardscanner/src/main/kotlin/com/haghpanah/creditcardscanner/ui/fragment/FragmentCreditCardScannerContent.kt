@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,12 +17,15 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.snackbar.Snackbar
+import com.haghpanah.creditcardscanner.Constant
+import com.haghpanah.creditcardscanner.ui.theme.CreditCardScannerColors
 import com.haghpanah.creditcardscanner.ui.viewmodel.CreditCardScannerViewModel
+import com.haghpanah.scanner.R
 import com.haghpanah.scanner.databinding.FragmentCreditCardScannerContentBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.concurrent.Executor
 
 @AndroidEntryPoint
 class FragmentCreditCardScannerContent : Fragment() {
@@ -55,6 +57,7 @@ class FragmentCreditCardScannerContent : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupComponents()
 
         if (allPermissionsGranted()) {
             startCamera()
@@ -94,6 +97,15 @@ class FragmentCreditCardScannerContent : Fragment() {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    fun showError(message: String) {
+        Snackbar.make(
+            requireContext(),
+            _binding.root,
+            message,
+            1000
+        ).show()
+    }
+
     private val activityResultLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -106,16 +118,25 @@ class FragmentCreditCardScannerContent : Fragment() {
                     permissionGranted = false
             }
             if (!permissionGranted) {
-                Toast.makeText(
-                    requireContext(),
-                    "Permission request denied",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showError("لطفا")
             } else {
                 startCamera()
             }
         }
 
+    private fun setupComponents() {
+        val colors = getColorsOrDefault()
+
+        _binding.hint.apply {
+            text = context.getString(R.string.message_default_hint)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                setBackgroundColor(colors.hintContainerColor)
+                setTextColor(colors.hintContentColor)
+                alpha = 0.7f
+            }
+        }
+    }
 
     companion object {
         private val REQUIRED_PERMISSIONS =
@@ -128,4 +149,22 @@ class FragmentCreditCardScannerContent : Fragment() {
                 }
             }.toTypedArray()
     }
+}
+
+private fun FragmentCreditCardScannerContent.getColorsOrDefault(): CreditCardScannerColors {
+    val givenColors = arguments?.getSerializable(
+        Constant.COLORS_BUNDLE_KEY,
+    ) as CreditCardScannerColors?
+
+    return givenColors ?: CreditCardScannerColors(
+        topBarContainerColor = requireContext().getColor(R.color.primary),
+        topBarContentColor = requireContext().getColor(R.color.on_primary),
+        snackbarContainerColor = requireContext().getColor(R.color.snackbar_container),
+        snackbarContentColor = requireContext().getColor(R.color.on_surface),
+        snackbarActionColor = requireContext().getColor(R.color.error),
+        hintContainerColor = requireContext().getColor(R.color.surface),
+        hintContentColor = requireContext().getColor(R.color.on_surface),
+        loadingDialogContainerColor = requireContext().getColor(R.color.surface),
+        loadingDialogContentColor = requireContext().getColor(R.color.on_surface)
+    )
 }

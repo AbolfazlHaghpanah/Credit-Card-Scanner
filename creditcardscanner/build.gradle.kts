@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kapt)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -11,7 +12,7 @@ android {
 
     buildTypes {
         debug {
-            ndk{
+            ndk {
                 abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
             }
         }
@@ -21,7 +22,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            ndk{
+            ndk {
                 abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
             }
         }
@@ -92,5 +93,4 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
 }

@@ -50,4 +50,5 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="message_default_hint">لطفا کارت بانکی را جلوی دوربین نگه دارید</string>
 </resources>
