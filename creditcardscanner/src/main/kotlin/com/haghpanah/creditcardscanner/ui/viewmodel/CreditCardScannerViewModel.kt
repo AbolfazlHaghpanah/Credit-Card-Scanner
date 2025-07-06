@@ -1,6 +1,5 @@
 package com.haghpanah.creditcardscanner.ui.viewmodel
 
-import android.graphics.Bitmap
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -11,6 +10,7 @@ import com.haghpanah.creditcardscanner.core.CreditCardScanner
 import com.haghpanah.creditcardscanner.data.imagerecognizer.ImageRecognizer
 import com.haghpanah.creditcardscanner.data.model.CreditCardData
 import com.haghpanah.creditcardscanner.data.textrecognizer.TextRecognizer
+import com.haghpanah.creditcardscanner.ui.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +26,7 @@ class CreditCardScannerViewModel @Inject constructor(
     private val imageRecognizer: ImageRecognizer,
     private val creditCardScanner: CreditCardScanner,
 ) : ViewModel() {
-    private val _scanResult = MutableStateFlow<CreditCardData?>(null)
+    private val _scanResult = MutableStateFlow<Result<CreditCardData>>(Result.Idle)
     val scanResult = _scanResult.asStateFlow()
 
     init {
@@ -56,20 +56,25 @@ class CreditCardScannerViewModel @Inject constructor(
             )
 
             if (isCreditCardFound) {
+                _scanResult.value = Result.Loading
                 imageAnalysis.clearAnalyzer()
 
-                val creditCardDataResult = textRecognizer.getCreditCardData(
-                    imageProxy = image,
-                    exportShaba = false,
-                    exportCvv2 = false,
-                    exportExpireDate = false,
-                    exportBankName = false,
-                )
+                runCatching {
+                    val creditCardDataResult = textRecognizer.getCreditCardData(
+                        imageProxy = image,
+                        exportShaba = false,
+                        exportCvv2 = false,
+                        exportExpireDate = false,
+                        exportBankName = false,
+                    )
 
-                viewModelScope.launch {
-                    creditCardDataResult?.let {
-                        creditCardScanner.setCreditCardData(creditCardDataResult)
+                    viewModelScope.launch {
+                        creditCardDataResult?.let {
+                            creditCardScanner.setCreditCardData(creditCardDataResult)
+                        }
                     }
+                }.onFailure {
+                    _scanResult.value = Result.Fail(it)
                 }
             } else {
                 image.close()
@@ -80,7 +85,7 @@ class CreditCardScannerViewModel @Inject constructor(
     private fun observeCreditCardData() {
         viewModelScope.launch {
             creditCardScanner.observeCreditCardData().collect {
-                _scanResult.emit(it)
+                _scanResult.emit(Result.Success(it))
             }
         }
     }

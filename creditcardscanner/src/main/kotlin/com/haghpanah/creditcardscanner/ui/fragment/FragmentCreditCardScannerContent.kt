@@ -1,24 +1,26 @@
 package com.haghpanah.creditcardscanner.ui.fragment
 
 import android.Manifest
+import android.app.Dialog
+import android.app.ProgressDialog
 import android.content.pm.PackageManager
-import android.health.connect.datatypes.units.Length
-import android.opengl.Visibility
-import android.os.Build
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.text.Layout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
 import android.view.View.TEXT_ALIGNMENT_CENTER
 import android.view.View.VISIBLE
 import android.view.ViewGroup
-import android.widget.Toast
+import android.widget.FrameLayout
+import android.widget.ProgressBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
-import androidx.appcompat.app.AlertDialog
 import androidx.camera.core.CameraSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -32,12 +34,14 @@ import com.haghpanah.creditcardscanner.Constant.HINT_VISIBLE_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.Constant.TOP_BAR_TEXT_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.Constant.TOP_BAR_VISIBLE_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.ui.theme.CreditCardScannerColors
+import com.haghpanah.creditcardscanner.ui.utils.Result
 import com.haghpanah.creditcardscanner.ui.viewmodel.CreditCardScannerViewModel
 import com.haghpanah.scanner.R
 import com.haghpanah.scanner.databinding.FragmentCreditCardScannerContentBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import androidx.core.graphics.drawable.toDrawable
 
 @AndroidEntryPoint
 class FragmentCreditCardScannerContent : Fragment() {
@@ -53,21 +57,43 @@ class FragmentCreditCardScannerContent : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View? {
+
+        val loadingDialogView = layoutInflater.inflate(R.layout.loading_dialog, null).apply {
+            findViewById<ProgressBar>(R.id.loading_dialog_progress_bar).indeterminateTintList =
+                ColorStateList.valueOf(getColorsOrDefault().loadingDialogContentColor)
+        }
+
+        val loadingDialog = Dialog(requireContext()).apply {
+            setContentView(loadingDialogView)
+            setCancelable(false)
+            setCanceledOnTouchOutside(false)
+            window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.scanResult.collectLatest {
-                    if (it != null) {
+                    if (it is Result.Loading) {
+                        loadingDialog.show()
+                    } else {
+                        loadingDialog.dismiss()
+                    }
+
+                    if (it is Result.Success) {
                         activity?.finish()
+                    }
+
+                    if (it is Result.Fail) {
+                        showError(
+                            message = getString(R.string.message_there_was_a_problem),
+                            length = Snackbar.LENGTH_INDEFINITE
+                        ) {
+                            viewModel.startAnalytics()
+                        }
                     }
                 }
             }
         }
-        val loadingDialogView = layoutInflater.inflate(R.layout.loading_dialog, null)
-        loadingDialogView.setBackgroundColor(getColorsOrDefault().loadingDialogContainerColor)
-
-        val loadingDialog = AlertDialog.Builder(requireContext())
-            .setView(loadingDialogView)
-
 
         _binding = FragmentCreditCardScannerContentBinding.inflate(inflater, container, false)
         return _binding.root

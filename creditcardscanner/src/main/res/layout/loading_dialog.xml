@@ -3,10 +3,14 @@
     android:id="@+id/loading_dialog_container"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="48.dp">
+    android:background="@drawable/dialog_rounded"
+    android:padding="32dp">
 
-    <com.google.android.material.progressindicator.CircularProgressIndicator
-        android:id="@+id/loading_dialog_content"
-        android:layout_width="56.dp"
-        android:layout_height="56.dp" />
+    <ProgressBar
+        android:id="@+id/loading_dialog_progress_bar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:indeterminate="true" />
 </FrameLayout>

@@ -54,4 +54,5 @@
     <string name="label_try_again">تلاش مجدد</string>
     <string name="default_toolbar_text">اسکن کارت بانکی</string>
     <string name="message_camera_permission_denied">لطفا دسترسی دوربین را فعال کنید</string>
+    <string name="message_there_was_a_problem">مشکلی در اسکن کارت بانکی به وجود آمده</string>
 </resources>
