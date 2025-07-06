@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.annotation.FontRes
 import com.haghpanah.creditcardscanner.data.model.CreditCardData
 import com.haghpanah.creditcardscanner.ui.theme.CreditCardScannerColors
-import com.haghpanah.creditcardscanner.ui.theme.CreditCardScannerLanguage
 import kotlinx.coroutines.flow.Flow
 
 
@@ -21,6 +20,5 @@ abstract class CreditCardScanner{
         topBarText: String? = null,
         shouldTopBarVisible: Boolean? = null,
         shouldShowHintText: Boolean? = null,
-        language: CreditCardScannerLanguage? = null,
     )
 }

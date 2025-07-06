@@ -3,6 +3,7 @@
     <style name="Theme.Scanner" parent="Base.Theme.Scanner" />
 
     <style name="Base.Theme.Scanner" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:layoutDirection">rtl</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary</item>
         <item name="colorOnPrimary">@color/on_primary</item>

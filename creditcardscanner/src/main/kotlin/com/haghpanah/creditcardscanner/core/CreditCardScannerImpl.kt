@@ -5,14 +5,12 @@ import android.content.Intent
 import com.haghpanah.creditcardscanner.Constant.COLORS_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.Constant.HINT_TEXT_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.Constant.HINT_VISIBLE_BUNDLE_KEY
-import com.haghpanah.creditcardscanner.Constant.LANGUAGE_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.Constant.TOP_BAR_TEXT_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.Constant.TOP_BAR_VISIBLE_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.Constant.TYPOGRAPHY_BUNDLE_KEY
 import com.haghpanah.creditcardscanner.data.model.CreditCardData
 import com.haghpanah.creditcardscanner.ui.CreditCardScannerActivity
 import com.haghpanah.creditcardscanner.ui.theme.CreditCardScannerColors
-import com.haghpanah.creditcardscanner.ui.theme.CreditCardScannerLanguage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -39,7 +37,6 @@ internal class CreditCardScannerImpl @Inject constructor() : CreditCardScanner()
         topBarText: String?,
         shouldTopBarVisible: Boolean?,
         shouldShowHintText: Boolean?,
-        language: CreditCardScannerLanguage?,
     ) {
         Intent(context, CreditCardScannerActivity::class.java).apply {
             colors?.let { putExtra(COLORS_BUNDLE_KEY, it) }
@@ -48,7 +45,6 @@ internal class CreditCardScannerImpl @Inject constructor() : CreditCardScanner()
             topBarText?.let { putExtra(TOP_BAR_TEXT_BUNDLE_KEY, it) }
             shouldTopBarVisible?.let { putExtra(TOP_BAR_VISIBLE_BUNDLE_KEY, it) }
             shouldShowHintText?.let { putExtra(HINT_VISIBLE_BUNDLE_KEY, it) }
-            language?.let { putExtra(LANGUAGE_BUNDLE_KEY, it) }
 
             context.startActivity(this)
         }

@@ -51,4 +51,7 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="message_default_hint">لطفا کارت بانکی را جلوی دوربین نگه دارید</string>
+    <string name="label_try_again">تلاش مجدد</string>
+    <string name="default_toolbar_text">اسکن کارت بانکی</string>
+    <string name="message_camera_permission_denied">لطفا دسترسی دوربین را فعال کنید</string>
 </resources>
