@@ -28,26 +28,33 @@ class TextRecognizerImpl @Inject constructor() : TextRecognizer {
             )
 
         var creditCardData: CreditCardData? = null
+        var error: Throwable? = null
 
         recognizer.process(imageInput)
             .addOnSuccessListener { text ->
-                creditCardData = text.textBlocks.map { it.text }.exportCreditCardData(
-                    exportShaba = exportShaba,
-                    exportCvv2 = exportCvv2,
-                    exportExpireDate = exportExpireDate,
-                    exportBankName = exportBankName
-                )
+                runCatching {
+                    creditCardData = text.textBlocks.map { it.text }.exportCreditCardData(
+                        exportShaba = exportShaba,
+                        exportCvv2 = exportCvv2,
+                        exportExpireDate = exportExpireDate,
+                        exportBankName = exportBankName
+                    )
+                }.onFailure {
+                    error = it
+                }
             }.addOnFailureListener {
-                throw it
+                error = it
             }.addOnCompleteListener {
                 imageProxy.close()
             }
 
         while (true) {
-            if (creditCardData != null) {
+            if (creditCardData != null || error != null) {
                 break
             }
         }
+
+        error?.let { throw it }
         return creditCardData
     }
 
@@ -56,7 +63,7 @@ class TextRecognizerImpl @Inject constructor() : TextRecognizer {
         exportCvv2: Boolean,
         exportExpireDate: Boolean,
         exportBankName: Boolean,
-    ): CreditCardData? {
+    ): CreditCardData {
         return CreditCardData(
             number = exportNumbers(),
             cvv2 = if (exportCvv2) exportCvv2() else null,
@@ -80,13 +87,15 @@ class TextRecognizerImpl @Inject constructor() : TextRecognizer {
     }
 
     private fun List<String>.exportCvv2(): String? {
-        //TODO
-        return null
+        return find { text ->
+            text.startsWith("CVV2") || text.startsWith("cvv2")
+        }
     }
 
     private fun List<String>.exportShaba(): String? {
-        //TODO
-        return null
+        return find { text ->
+            text.startsWith("IR") && text.length == 26
+        }
     }
 
     private fun List<String>.exportDate(): String? {
